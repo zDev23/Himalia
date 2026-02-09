@@ -1,0 +1,45 @@
+time = import("time")
+fmt = import("fmt")
+
+func civ(ora){
+    origin = NewCoordinate(5,488,8, MOON_TYPE)  
+    arrive = NewCoordinate(5,489,8, MOON_TYPE)
+    secRichiamo,oraRichiamo = calcoloRichiamo(origin,arrive,ora)
+    fleetCivile(origin,arrive,secRichiamo,oraRichiamo)
+}
+
+func mil(ora){
+    oraArrivo = ora
+    origin = NewCoordinate(5,133,7, MOON_TYPE)  
+    arrive = NewCoordinate(5,134,7, MOON_TYPE)
+    secRichiamo,oraRichiamo = calcoloRichiamo(origin,arrive,oraArrivo)
+    //fleeMilitareSpedi(origin,arrive,secRichiamo,oraRichiamo)
+    fleetMilitare(origin,arrive,secRichiamo,oraRichiamo)
+}
+
+func fleetTot(ora){
+    
+    origin = NewCoordinate(5,488,8, MOON_TYPE)  
+    arrive = NewCoordinate(5,489,8, MOON_TYPE)
+    secRichiamo,oraRichiamo = calcoloRichiamo(origin,arrive,ora)
+    fleetTotale(origin,arrive,secRichiamo,oraRichiamo)
+}
+
+//CronExec("00 30 09 * * *",func(){civ("12:59:00")})<- OnQuitCh
+
+//CronExec("00 39 13 * * *",func(){
+    fleetTot("06:00:00")
+    
+//})<- OnQuitCh
+
+//civ("07:30:30")
+
+//civ("12:59:00")
+
+//mil("08:30:00")
+
+//********************CIVILE******************
+
+//CronExec("00 45 13 * * *",func(){
+    
+//})<- OnQuitCh
