@@ -1,0 +1,104 @@
+time = import("time")
+fmt = import("fmt")
+
+func calcoloRichiamo(origine,arrivo,oraArrivo){
+    //Set one deathstar (slowest ship)
+    ships = NewShipsInfos()
+    ships.Set(DEATHSTAR,1)
+    now = time.Now()
+        
+    secVolo, fuel = FlightTime(origine, arrivo, TEN_PERCENT, *ships, PARK) //secs total flight time
+        
+    //Calc recall for second
+    //desiredArrivalTime = "07:30:00"
+    secTempo = MillisecondsBetweenTimeStrings(NowTimeString(), oraArrivo)/1000
+    
+    recall = secTempo/2
+    
+    LogInfo("Tempo volo = "+ secVolo + "  Secondi al richiamo = "+recall)
+        
+    if secVolo > recall{
+        //Calculate time of recall
+        duration = recall * time.Second
+        future = now.Add(duration) //time for recall
+        timeRecall = future.Format("15:04:05")
+        parsedTime, _ = ParseNextDatetimeAt(timeRecall)
+            
+        //Get sleep time and check if it is active
+        sleepTime = GetNextSleepTime()
+        wakeTime = GetNextWakeTime()
+        if sleepTime == nil || wakeTime == nil {
+          return
+        }
+            
+        //Check if recall is during sleep. If not --> send fleet save
+        if parsedTime.After(*sleepTime) && parsedTime.Before(*wakeTime) {
+            LogInfo("Recall durign sleep time...") 
+        }else{
+            LogInfo("OK " + recall + " all'ora "+ timeRecall)
+            //fleetCivile(origine,arrivo,recall,timeRecall)
+            return recall,timeRecall
+            //SendTelegram(TELEGRAM_CHAT_ID,"<"+GetUniverseName()+"-"+GetCachedPlayer().PlayerName+"> Fleet sent. Recall in "+ShortDur(recall) + " at "+ timeRecall ) 
+        }                                           
+    }else{
+        LogInfo("NOK Il richiamo è dopo l'ora di arrivo")
+    }    
+}
+
+func raccoltaDeuMin(deuMin,Origine,Arrivo) {
+
+    
+    //lune = GetCachedMoons()
+    minDeu = deuMin
+    risorseTot,err = GetResources(Origine)
+    deu = 0
+    if risorseTot.Deuterium <= minDeu{
+        deu = 0
+    }else{
+        deu = risorseTot.Deuterium - minDeu
+    }
+        
+    risorseDaCaricare = NewResources(risorseTot.Metal,risorseTot.Crystal,deu)
+    lc , sc = CalcCargo(risorseDaCaricare.Total())
+    
+    Print("Luna " + lc + " res da trasportare = "+ risorseDaCaricare.Total())
+    
+    
+    fleet = NewFleet()
+    fleet.SetOrigin(Origine)
+    fleet.SetDestination(Arrivo)
+    fleet.SetSpeed(HUNDRED_PERCENT)
+    fleet.SetMission(TRANSPORT)
+    fleet.SetResources(risorseDaCaricare)
+    fleet.AddShips(LARGECARGO, lc)
+    fleet, err = fleet.SendNow() 
+    
+    //Print("Luna = "+ l.Coordinate + " Servono = " + CalcCargo(GetResources(l).total())) 
+
+    
+}
+
+func fleetTotale(partenza,arrivo,secRic,timeRecall){
+
+    fleet = NewFleet()
+    fleet.SetOrigin(partenza)
+    fleet.SetDestination(arrivo)
+    fleet.SetSpeed(TEN_PERCENT)
+    fleet.SetMission(PARK)
+    fleet.SetAllResources()
+    fleet.SetAllShips()
+    fleet.SetRecallIn(secRic)
+    
+    secs,fuel = fleet.FlightTime()
+    
+    //LogInfo("Consumo Carburante = "+ Dotify(fuel))
+    fleet, err = fleet.SendNow() //Lancio flotta
+    
+    if err == nil {
+        LogInfo("<"+GetUniverseName()+"-"+GetCachedPlayer().PlayerName+"> Flotta inviata riciclo ID = " + fleet.ID + " Consumo carburante " + Dotify(fuel))
+        SendTelegram(TELEGRAM_CHAT_ID,"<"+GetUniverseName()+"-"+GetCachedPlayer().PlayerName+"> Fleet Militare Temp. Recall Recall at "+ timeRecall + " Consumo carburante " + Dotify(fuel) ) 
+        
+    }else{
+        LogError("Failed to create cronjob for " + err)
+    }
+}
