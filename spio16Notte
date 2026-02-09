@@ -1,0 +1,43 @@
+func spio16(vel){
+    SendTelegram(TELEGRAM_CHAT_ID,"Inizio invio flotte spio")
+    
+    lune = GetCachedMoons()
+    
+    for l in lune{
+        sistema = l.GetCoordinate().System
+        destination = NewCoordinate(l.GetCoordinate().Galaxy,sistema, 16, PLANET_TYPE)
+        fleet = NewFleet()
+        fleet.SetOrigin(l)
+        fleet.SetDestination(destination)
+        //fleet.SetSpeed(THIRTY_PERCENT)
+        fleet.SetSpeed(vel)
+        fleet.SetMission(SPY)
+        fleet.SetAllResources()
+        fleet.SetAllShips()
+        fleet, err = fleet.SendNow()
+        //SendTelegram(TELEGRAM_CHAT_ID,"Flotta Inviata da "+l.Coordinate+ " a "+destination)
+        SleepSec(7)
+    }
+    
+    
+}
+
+CronExec("00 15 20 * * *",func(){
+    RepatriateNow()
+})
+
+
+
+//CronExec("00 45 23 * * *",func(){
+CronExec("00 30 20 * * *",func(){
+    spio16(2)
+    SendTelegram(TELEGRAM_CHAT_ID,"<#1|Himalia-us|Ban> Flotte mandate in spio pos 16")
+})
+
+
+<- OnQuitCh
+
+
+
+//dovrei partire alle 23:33 al 30% in spio in sistema per riatterrare alle 6:05
+//dovrei partire alle 20:33 al 20% in spio in sistema per riatterrare alle 6:30
